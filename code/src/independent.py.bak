@@ -1,0 +1,25 @@
+from genai_prompt import ask_genai
+
+def main():
+    print("Starting the analysis...")
+    # Reading the file
+    with open("D:\\RAJESHGOLD\\HACKATHON\\aidel-natural-intelligence-team\\artifacts\\testdata\\transaction.txt", "r", encoding="utf-8") as file:
+        transactionDetails = file.read()
+
+    # Prompt for extracting entities
+    prompt = f"Identify people and company in '{transactionDetails}'. Return a JSON with objects identifiedRisks, entityBasicRiskRating, entityName and entityType. entityType can be People or Company. IdentifiedRisks field should have risks identified with people or company based on transaction input given. entityBasicRisk rating will be very low, low, medium, high, very high based on notes and other details in transaction. Keep the original transaction detail fields associated with each entity for verification."
+    # Step 1: Extract entities using GenAI
+    entities = ask_genai(prompt, "Entity Extraction")
+    print("Entities identified:")
+    print(entities)
+    
+    # Prompt for coming up with risk assessment
+    with open("D:\\RAJESHGOLD\\HACKATHON\\aidel-natural-intelligence-team\\code\\src\\assessment_rules.txt", "r", encoding="utf-8") as file:
+        assessmentRules = file.read()
+    assessmentPrompt = f"Use the following assessment rules and come up with riskRating, riskRationale, complianceRating and complianceRationle  for each entity in '{entities}', AssessmentRules:'{assessmentRules}'. Look for internet for more recent data and news. Keep the original transaction detail fields associated with each entity for verification. Provide output in JSON format."
+    # Step 2: Risk Assessement using GenAI
+    riskAndComplainceReport = ask_genai(assessmentPrompt, "Risk Assessment")
+    print("Final Risk and Compliance Report:")
+    print(riskAndComplainceReport)
+    print("Analysis is complete.")
+    
