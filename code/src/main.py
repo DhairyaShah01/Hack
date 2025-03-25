@@ -7,20 +7,18 @@ import requests  # For making HTTP requests
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
 from typing import List  # Add this import
+
 app = FastAPI()
+
 
 class EntityInput(BaseModel):
     entities: List[str]  # List of entity names provided by the user
 
+
 # Function to perform a web search using Bing Search API
 def web_search(entity_name):
     endpoint = "https://api.duckduckgo.com/"
-    params = {
-        "q": entity_name,
-        "format": "json",
-        "no_html": 1,
-        "skip_disambig": 1
-    }
+    params = {"q": entity_name, "format": "json", "no_html": 1, "skip_disambig": 1}
     response = requests.get(endpoint, params=params)
     print(f"Raw response for {entity_name}: {response.text}")  # Debug print
 
@@ -34,10 +32,12 @@ def web_search(entity_name):
         print(f"Error decoding JSON for {entity_name}: {e}")
         return []
 
+
 def analyze_sentiment(text):
     sentiment_pipeline = pipeline("sentiment-analysis")
     result = sentiment_pipeline(text)
     return result  # Returns a list of dictionaries with 'label' (e.g., 'POSITIVE') and 'score'
+
 
 @app.post("/entity/assessment")
 async def upload_file(input_data: EntityInput):
@@ -63,13 +63,22 @@ async def upload_file(input_data: EntityInput):
             search_results = [{"snippet": "No data available"}]
 
         # Perform sentiment analysis on the search results
-        combined_text = " ".join([result["snippet"] for result in search_results])  # Combine snippets
-        sentiment = analyze_sentiment(combined_text) if combined_text else "No data available"
+        combined_text = " ".join(
+            [
+                result.get("snippet", "")
+                for result in search_results
+                if isinstance(result, dict)
+            ]
+        )
+        # Combine snippets
+        sentiment = (
+            analyze_sentiment(combined_text) if combined_text else "No data available"
+        )
 
         entity_result = {
             "entityName": entity_name,
             "searchResults": search_results,
-            "sentiment": sentiment
+            "sentiment": sentiment,
         }
 
         results.append(entity_result)
@@ -89,20 +98,27 @@ async def upload_file(input_data: EntityInput):
     print(riskAndComplianceReport)
     print("Analysis is complete. Returning the result.")
     # Clean the string by removing "```json" and "```"
-    if riskAndComplianceReport.startswith("```json"):
-        riskAndComplianceReport = riskAndComplianceReport.lstrip("```json")
-    if riskAndComplianceReport.endswith("```"):
-        riskAndComplianceReport = riskAndComplianceReport.rstrip("```")
-    cleaned_str = riskAndComplianceReport.strip()
+    # if riskAndComplianceReport.startswith("```json"):
+    #     riskAndComplianceReport = riskAndComplianceReport.lstrip("```json")
+    # if riskAndComplianceReport.endswith("```"):
+    #     riskAndComplianceReport = riskAndComplianceReport.rstrip("```")
+    # cleaned_str = riskAndComplianceReport.strip()
 
+    riskAndComplianceReport = ask_genai(assessmentPrompt, "Risk Assessment")
 
-    try:
-        parsed_json = json.loads(cleaned_str)
-    except json.JSONDecodeError as e:
-        print(f"JSON parsing error: {e}")
-        raise ValueError("The response is not valid JSON.")
-    
+    # ✅ If it's a string, convert it to a dictionary
+    if isinstance(riskAndComplianceReport, str):
+        try:
+            parsed_json = json.loads(riskAndComplianceReport)  # Convert string to dict
+        except json.JSONDecodeError:
+            print("Error: AI response is not valid JSON")
+            return {"error": "Invalid AI response"}
+    else:
+        parsed_json = riskAndComplianceReport  # Already a dict, no need to parse
+
+    # ✅ Return valid JSON response
     return parsed_json
+
 
 app.add_middleware(
     CORSMiddleware,
