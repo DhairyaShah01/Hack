@@ -22,6 +22,25 @@ class EntityInput(BaseModel):
     currency: str  # Currency associated with the transaction
     transaction_details: str  # Additional notes provided by the user
 
+def is_csv_file(file: UploadFile) -> bool:
+    """
+    Checks whether the given file is in CSV format.
+    :param file: The uploaded file to check.
+    :return: True if the file is in CSV format, False otherwise.
+    """
+    # Check file extension
+    if not file.filename.endswith(".csv"):
+        return False
+
+    try:
+        # Read a small portion of the file to validate its content
+        content = file.file.read(1024).decode("utf-8")
+        file.file.seek(0)  # Reset file pointer after reading
+        csv.Sniffer().sniff(content)  # Validate CSV structure
+        return True
+    except (csv.Error, UnicodeDecodeError):
+        return False
+
 #Parses CSV file content into a structured list.
 def parse_csv(file_content: bytes) -> List[Dict[str, str]]:
     decoded_content = file_content.decode("utf-8")
@@ -40,6 +59,7 @@ def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
         f"'amount': <float>, 'currency': <string>, 'transaction_details': <string>}}. "
         f"Ensure the output is in JSON format and adheres to the EntityInput structure."
         f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
+        f"If currency is not found, default to USD"
     )
 
     print("Souchu: ", row)
@@ -117,18 +137,22 @@ def analyze_sentiment(text):
 @app.post("/entity/assessment")
 async def upload_file(
     file: Optional[UploadFile] = None,  # Make file optional
-    text: Optional[str] = None  # Make text optional
+    #text: Optional[str] = None  # Make text optional
 ):
-    if not file and not text:
+    if not file:
         raise HTTPException(status_code=400, detail="No file or text provided")
 
     structured_data = []
     
-    if file:
+    if is_csv_file(file):
         structured_data = parse_csv(await file.read())
         structured_data = [convert_row_to_entity_input(row) for row in structured_data]
-    elif text:
+    else:
+        text = await file.read()
         structured_data = extract_from_unstructured(text)
+        print(f"Extracted structured data before: {structured_data}")
+        structured_data = [convert_row_to_entity_input(structured_data)]
+        print(f"Extracted structured data after: {structured_data}")  
 
     if not structured_data:
         raise HTTPException(status_code=500, detail="No structured data found")
@@ -225,6 +249,7 @@ def process_input(input_data: any):
     f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
     f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
     f"Do not include any additional text in the output apart from the generated json."
+    f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
 )
 
     # Step 2: Risk Assessment using GenAI
