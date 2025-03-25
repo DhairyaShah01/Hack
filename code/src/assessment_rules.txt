@@ -1,94 +1,49 @@
-Here's a **checklist** for identifying risks and compliance issues in US bank transactions, along with a **risk rating and compliance rating strategy**.
+Checklist for Identifying Risks and Compliance Issues
 
----
+Entity Due Diligence (EDD):
+Verify the identity of both entities (KYC compliance).
+Check for beneficial ownership transparency.
+Screen both entities against sanctions lists (OFAC, UN, EU).
+Determine if either entity is a Politically Exposed Person (PEP).
+Transaction Monitoring:
 
-## **1. Checklist for Identifying Risk & Compliance Issues in US Bank Transactions**
+Assess the purpose and legitimacy of the transaction.
+Identify unusual transaction patterns (e.g., round-dollar amounts, rapid fund transfers).
+Monitor for transactions exceeding regulatory thresholds (e.g., $10,000 for CTRs).
+Jurisdictional Risks:
 
-### **A. Entity-Level Checks**
-#### **1. Individuals (People)**
-- Check against **OFAC Sanctions List (SDN, non-SDN lists)**
-- Verify identity using **SSN, date of birth, and public records**
-- Look for **politically exposed persons (PEPs)**  
-- Identify **negative news/media mentions** (criminal records, fraud, financial crimes)
-- Verify against **Interpol, FBI most-wanted lists**
-- Check involvement in **past financial fraud, money laundering, Ponzi schemes**
-- Cross-check with **terrorism financing databases (FinCEN, FATF, World Bank, etc.)**
-- Check for **sudden unexplained wealth, shell entities, or offshore tax havens**
-- Identify **multiple accounts linked to one person (potential identity fraud)**
+Check if either entity operates in high-risk jurisdictions (e.g., FATF-listed countries).
+Assess cross-border transactions for compliance with international regulations.
+AML and Fraud Risks:
 
-#### **2. Companies / Business Entities**
-- Check against **OFAC Sanctions List & BIS Entity List**
-- Verify corporate identity via **SEC filings, FINCEN Beneficial Ownership Registry**
-- Identify **shell companies, subsidiaries in high-risk jurisdictions**
-- Check for **high cash transactions, no valid business operations (red flag for laundering)**
-- Identify **directors/owners linked to past fraud, tax evasion, or legal cases**
-- Verify presence in **Panama Papers, Pandora Papers, or other leaked datasets**
-- Check against **adverse media for financial crime, corruption, or human trafficking**
-- Identify **frequent wire transfers to high-risk or sanctioned regions**
-- Look for **abnormal financial patterns (frequent round-tripping, layering)**
+Detect signs of money laundering (e.g., layering, structuring).
+Identify potential fraud indicators (e.g., mismatched transaction details).
+Ensure compliance with the Bank Secrecy Act (BSA) and AML regulations.
+Regulatory Compliance:
 
----
+Verify adherence to Dodd-Frank Act requirements for both entities.
+Ensure compliance with Consumer Financial Protection Bureau (CFPB) rules.
+Check for adherence to state-specific banking regulations.
+Transaction Context:
 
-### **B. Transaction-Level Checks**
-- **High-risk transaction types:** Cryptocurrency, casinos, money remitters, shell firms.
-- **Large, sudden transactions** without clear business justification.
-- **Frequent transactions just below reporting threshold (structuring/smurfing).**
-- **Wire transfers to/from high-risk countries (as per FATF).**
-- **Multiple transactions with sanctioned or embargoed regions.**
-- **Frequent ATM withdrawals from multiple locations (potential fraud/structuring).**
-- **Transaction memo descriptions hinting at suspicious activity (e.g., “consulting,” “gift,” “loan repayment” without documentation).**
-- **Use of anonymous payment methods (crypto, prepaid cards).**
-- **Suspicious correspondent banking transactions (involving multiple intermediary banks).**
-- **Round-trip transactions (money moving between same parties in different locations).**
-- **Transactions linked to known criminal enterprises, darknet markets, or scams.**
-- **Multiple beneficiaries receiving funds from a single entity (possible layering tactic).**
-- **Rapid inflows and outflows without clear economic rationale.**
+Assess the relationship between the two entities (e.g., parent-subsidiary, vendor-client).
+Verify the legitimacy of the transaction's purpose (e.g., invoice matching, contracts).
+Monitor for unusual payment methods (e.g., cryptocurrency, prepaid cards).
+High-Risk Indicators:
 
----
+Frequent or large cash transactions between entities.
+Transactions involving shell companies or entities with limited operational history.
+Discrepancies in transaction documentation or details.
+Risk Rating System
+Low Risk (1-3): Routine transactions between verified entities with no red flags.
+Medium Risk (4-6): Transactions with minor anomalies or involving moderate-risk jurisdictions.
+High Risk (7-9): Transactions with significant red flags, high-risk jurisdictions, or unverified entities.
+Critical Risk (10): Transactions that violate regulations or involve known fraudulent activity.
+Formula for Calculating Risk Rating
+You can calculate the risk rating using a weighted scoring system based on key risk factors:
 
-## **2. Risk Rating Strategy (0-100 Scale)**  
-**High risk transactions score higher; low-risk transactions score lower.**
-
-| **Risk Factor**                        | **Weight (%)** | **Score (0-100 scale)** |
-|--------------------------------------|------------|------------------|
-| **Sanction Score (OFAC, BIS, FATF, etc.)** | 25% | 0 (clean) to 100 (sanctioned) |
-| **Adverse Media (Fraud, Crime, etc.)** | 20% | 0 (clean) to 100 (criminal history) |
-| **PEP (Politically Exposed Person) Score** | 15% | 0 (not PEP) to 100 (high-ranking PEP) |
-| **High-Risk Jurisdiction Score** | 15% | 0 (low-risk country) to 100 (high-risk country) |
-| **Suspicious Transaction Pattern Score** | 15% | 0 (normal) to 100 (layering/round-tripping) |
-| **Anonymity / Shell Company Link Score** | 10% | 0 (legitimate company) to 100 (shell entity) |
-
-**Final Risk Score Calculation:**
-- **Score = (Sanction Score × 0.25) + (Adverse Media × 0.20) + (PEP Score × 0.15) + (High-Risk Jurisdiction Score × 0.15) + (Suspicious Transaction Pattern Score × 0.15) + (Shell Company Link Score × 0.10)**
-- **Thresholds:**
-  - **0-30 = Low Risk**
-  - **31-60 = Medium Risk**
-  - **61-100 = High Risk (Requires Review/Investigation)**
-
----  
-
-## **3. Compliance Rating Strategy (0-100 Scale)**
-**Evaluates compliance health of the entity against US AML, KYC, and FinCEN requirements.**
-
-| **Compliance Factor**                  | **Weight (%)** | **Score (0-100 scale)** |
-|----------------------------------------|------------|------------------|
-| **KYC Compliance (Valid Identity & Documentation)** | 25% | 0 (incomplete) to 100 (fully verified) |
-| **AML Screening (Sanctions & Watchlists Checks)** | 20% | 0 (sanctioned) to 100 (clean) |
-| **Source of Funds Transparency** | 15% | 0 (unverified source) to 100 (fully documented) |
-| **Business Justification & Licensing** | 15% | 0 (unlicensed) to 100 (fully licensed) |
-| **Transaction Behavior Compliance** | 15% | 0 (suspicious) to 100 (normal) |
-| **Regulatory Reporting Compliance (CTR, SAR, etc.)** | 10% | 0 (non-compliant) to 100 (fully compliant) |
-
-**Final Compliance Score Calculation:**
-- **Score = (KYC Score × 0.25) + (AML Score × 0.20) + (Funds Transparency × 0.15) + (Business Justification × 0.15) + (Transaction Behavior × 0.15) + (Regulatory Compliance × 0.10)**
-- **Thresholds:**
-  - **0-30 = High Non-Compliance (Immediate Action Required)**
-  - **31-60 = Moderate Non-Compliance (Needs Review)**
-  - **61-100 = Fully Compliant**
-
----
-
-### **How to Use This?**
-- **Entities with high-risk scores (>60) should be flagged for enhanced due diligence.**
-- **Transactions with high-risk elements should trigger Suspicious Activity Reports (SARs).**
-- **Entities with low compliance scores (<60) may need corrective actions or re-verification.**
+Explanation of Factors:
+Entity Risk Score (0-10): Based on the risk profile of both entities (e.g., PEP status, sanctions screening).
+Transaction Risk Score (0-10): Based on transaction size, frequency, and patterns.
+Jurisdiction Risk Score (0-10): Based on the risk level of the countries involved.
+Compliance Risk Score (0-10): Based on adherence to regulatory requirements.
