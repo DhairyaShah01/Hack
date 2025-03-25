@@ -1,3 +1,6 @@
+import csv
+from http.client import HTTPException
+import io
 from fastapi import FastAPI, File, UploadFile
 from genai_prompt import ask_genai
 from pydantic import BaseModel
@@ -6,16 +9,87 @@ import json
 import requests  # For making HTTP requests
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
-from typing import List  # Add this import
+from typing import Dict, List, Optional  # Add this import
 
 app = FastAPI()
 
 
 class EntityInput(BaseModel):
-    entities: List[str]  # List of entity names provided by the user
+    transaction_id: str  # Transaction ID provided by the user
+    sender: str  # Sender name provided by the user
+    receiver: str  # Receiver name provided by the user
     amount: float  # Amount associated with the transaction
     currency: str  # Currency associated with the transaction
+    transaction_details: str  # Additional notes provided by the user
 
+#Parses CSV file content into a structured list.
+def parse_csv(file_content: bytes) -> List[Dict[str, str]]:
+    decoded_content = file_content.decode("utf-8")
+    reader = csv.DictReader(io.StringIO(decoded_content))
+    return [row for row in reader]
+
+def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
+    """
+    Converts a selected row into the EntityInput format using the ask_genai function.
+    """
+    # Generate a prompt for ask_genai
+    prompt = (
+        f"Convert the following row into the EntityInput format:\n"
+        f"Row: {row}\n"
+        f"EntityInput format: {{'transaction_id': <string>, 'sender': <string>, 'receiver': <string>, "
+        f"'amount': <float>, 'currency': <string>, 'transaction_details': <string>}}. "
+        f"Ensure the output is in JSON format and adheres to the EntityInput structure."
+        f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
+    )
+
+    print("Souchu: ", row)
+
+    # Call ask_genai to process the row
+    response = ask_genai(prompt, "Row to EntityInput Conversion")
+
+    try:
+        # Parse the response into a dictionary
+        if isinstance(response, str):
+            parsed_response = json.loads(response)
+        elif isinstance(response, dict):
+            parsed_response = response
+        else:
+            raise ValueError("Unexpected response type")
+
+        # Convert the parsed response into an EntityInput object
+        entity_input = EntityInput(**parsed_response)
+        return entity_input
+
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to convert row to EntityInput: {str(e)}",
+        )
+
+
+# Extracts structured transaction details from unstructured text using GenAI.
+def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
+    prompt = (
+        f"Extract transaction details from the given text and return structured CSV format:"
+        f"Transaction ID, Sender, Receiver, Amount, Currency, Transaction Details."
+        f"Include details such as additional notes, remarks, or any other relevant information in transaction details."
+        f"Ensure data integrity and return JSON format."
+        f"Do not include any additional text in the output apart from the generated json."
+        f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
+    )
+    response = ask_genai(f"Text: {text}\n{prompt}", "Entity Extraction")
+    try:
+        if isinstance(response, str):
+            return json.loads(response)
+        elif isinstance(response, dict):
+            return response
+        else:
+            raise ValueError("Unexpected response type")
+    except (json.JSONDecodeError, ValueError) as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid AI response for unstructured data parsing: {str(e)}",
+        )
 
 # Function to perform a web search using Bing Search API
 def web_search(entity_name):
@@ -40,22 +114,52 @@ def analyze_sentiment(text):
     result = sentiment_pipeline(text)
     return result  # Returns a list of dictionaries with 'label' (e.g., 'POSITIVE') and 'score'
 
-
 @app.post("/entity/assessment")
-async def upload_file(input_data: EntityInput):
-    entities = input_data.entities  # Get the list of entities from the user input
+async def upload_file(
+    file: Optional[UploadFile] = None,  # Make file optional
+    text: Optional[str] = None  # Make text optional
+):
+    if not file and not text:
+        raise HTTPException(status_code=400, detail="No file or text provided")
+
+    structured_data = []
+    
+    if file:
+        structured_data = parse_csv(await file.read())
+        structured_data = [convert_row_to_entity_input(row) for row in structured_data]
+    elif text:
+        structured_data = extract_from_unstructured(text)
+
+    if not structured_data:
+        raise HTTPException(status_code=500, detail="No structured data found")
+
+    results = []
+
+    # Extract structured transaction details from unstructured text
+    for transaction in structured_data:
+        print(f"Extracted transaction details: {transaction}")
+        results.append(process_input(transaction))  # Process each transaction   
+
+    return results
+
+def process_input(input_data: any):
+    entities = [input_data.sender, input_data.receiver]  # Get the list of entities from the user input
     amount = input_data.amount  # Get the transaction amount
     currency = input_data.currency  # Get the transaction currency
+    remarks = input_data.transaction_details  # Get the remarks associated with the transaction
+    transaction_id = input_data.transaction_id  # Get the transaction ID
 
     if len(entities) < 2:
         return {"error": "At least two entities are required for the transaction."}
 
     # Define the transaction details
     transaction_details = {
+        "transaction_id": transaction_id,
         "from": entities[0],
         "to": entities[1],
         "amount": amount,
         "currency": currency,
+        "remarks": remarks,
     }
 
     print(f"Transaction details: {transaction_details}")
@@ -105,9 +209,9 @@ async def upload_file(input_data: EntityInput):
 
     # Prompt for coming up with risk assessment
     assessmentPrompt = (
-    f"Use the following assessment rules and results dictionary to evaluate the transaction. "
-    f"Run the evaluation 20 times independently and calculate the average confidence score across all runs. "
-    f"Provide a final riskRating, riskRationale, and the average confidence score for the transaction. "
+    f"Use the following assessment rules and results dictionary {results} to evaluate the transaction. "
+    f"Run the evaluation 5 times independently and calculate the average confidence score and risk scores across all runs. "
+    f"Provide a final riskRating, riskRationale, and the average confidence score for the transaction weighing in the entities, amount, currency and remarks in the transaction. "
     f"Transaction details: {transaction_details}, AssessmentRules: '{assessmentRules}'. "
     f"Check in OpenCorporate, Wikipedia, Sanctions lists around the world. "
     f"Keep the original transaction detail fields associated, for verification and make sure the format is adhering to JSON format"
@@ -120,7 +224,7 @@ async def upload_file(input_data: EntityInput):
     f'"PEP Score": <value>, "High Risk Jurisdiction Score": <value>, '
     f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
     f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
-    f"Do not include any additional text in the output apart from this report."
+    f"Do not include any additional text in the output apart from the generated json."
 )
 
     # Step 2: Risk Assessment using GenAI
