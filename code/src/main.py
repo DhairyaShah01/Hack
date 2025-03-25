@@ -3,69 +3,16 @@ from http.client import HTTPException
 import io
 from fastapi import FastAPI, File, UploadFile
 from genai_prompt import ask_genai
-from pydantic import BaseModel
+from models import EntityInput
 import os
 import json
 import requests  # For making HTTP requests
+from utils import getCombinedSearchResults
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
 from typing import Dict, List, Optional  # Add this import
 
 app = FastAPI()
-
-
-class EntityInput(BaseModel):
-    transaction_id: str  # Transaction ID provided by the user
-    sender: str  # Sender name provided by the user
-    receiver: str  # Receiver name provided by the user
-    amount: float  # Amount associated with the transaction
-    currency: str  # Currency associated with the transaction
-    transaction_details: str  # Additional notes provided by the user
-
-#Parses CSV file content into a structured list.
-def parse_csv(file_content: bytes) -> List[Dict[str, str]]:
-    decoded_content = file_content.decode("utf-8")
-    reader = csv.DictReader(io.StringIO(decoded_content))
-    return [row for row in reader]
-
-def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
-    """
-    Converts a selected row into the EntityInput format using the ask_genai function.
-    """
-    # Generate a prompt for ask_genai
-    prompt = (
-        f"Convert the following row into the EntityInput format:\n"
-        f"Row: {row}\n"
-        f"EntityInput format: {{'transaction_id': <string>, 'sender': <string>, 'receiver': <string>, "
-        f"'amount': <float>, 'currency': <string>, 'transaction_details': <string>}}. "
-        f"Ensure the output is in JSON format and adheres to the EntityInput structure."
-        f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
-    )
-
-    print("Souchu: ", row)
-
-    # Call ask_genai to process the row
-    response = ask_genai(prompt, "Row to EntityInput Conversion")
-
-    try:
-        # Parse the response into a dictionary
-        if isinstance(response, str):
-            parsed_response = json.loads(response)
-        elif isinstance(response, dict):
-            parsed_response = response
-        else:
-            raise ValueError("Unexpected response type")
-
-        # Convert the parsed response into an EntityInput object
-        entity_input = EntityInput(**parsed_response)
-        return entity_input
-
-    except (json.JSONDecodeError, ValueError, TypeError) as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to convert row to EntityInput: {str(e)}",
-        )
-
 
 # Extracts structured transaction details from unstructured text using GenAI.
 def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
@@ -91,28 +38,6 @@ def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
             detail=f"Invalid AI response for unstructured data parsing: {str(e)}",
         )
 
-# Function to perform a web search using Bing Search API
-def web_search(entity_name):
-    endpoint = "https://api.duckduckgo.com/"
-    params = {"q": entity_name, "format": "json", "no_html": 1, "skip_disambig": 1}
-    response = requests.get(endpoint, params=params)
-    print(f"Raw response for {entity_name}: {response.text}")  # Debug print
-
-    try:
-        if response.status_code == 200:
-            return response.json().get("RelatedTopics", [])
-        else:
-            print(f"Search failed for {entity_name}: {response.status_code}")
-            return []
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON for {entity_name}: {e}")
-        return []
-
-
-def analyze_sentiment(text):
-    sentiment_pipeline = pipeline("sentiment-analysis")
-    result = sentiment_pipeline(text)
-    return result  # Returns a list of dictionaries with 'label' (e.g., 'POSITIVE') and 'score'
 
 @app.post("/entity/assessment")
 async def upload_file(
@@ -165,29 +90,13 @@ def process_input(input_data: any):
     print(f"Transaction details: {transaction_details}")
 
     # Perform web search for all entities and aggregate results
-    combined_search_results = []
-    for entity_name in entities:
-        print(f"Performing web search for entity: {entity_name}")
-        search_results = web_search(entity_name)  # Perform web search
-
-        if not search_results:
-            search_results = [{"snippet": "No data available"}]
-
-        combined_search_results.extend(search_results)
+    combined_search_results = getCombinedSearchResults(entities)
 
     # Combine all snippets for sentiment analysis
-    combined_text = " ".join(
-        [
-            result.get("snippet", "")
-            for result in combined_search_results
-            if isinstance(result, dict)
-        ]
-    )
+    combined_text = " ".join([result.get("snippet", "") for result in combined_search_results if isinstance(result, dict)])
 
     # Perform sentiment analysis on the combined text
-    sentiment = (
-        analyze_sentiment(combined_text) if combined_text else "No data available"
-    )
+    sentiment = (analyze_sentiment(combined_text) if combined_text else "No data available")
 
     # Prepare the results for all entities
     results = [
