@@ -51,15 +51,15 @@ Here's a **checklist** for identifying risks and compliance issues in US bank tr
 
 | **Risk Factor**                        | **Weight (%)** | **Score (0-100 scale)** |
 |--------------------------------------|------------|------------------|
-| **Entity Sanctions (OFAC, BIS, FATF, etc.)** | 25% | 0 (clean) to 100 (sanctioned) |
-| **Adverse Media Mentions (Fraud, Crime, etc.)** | 20% | 0 (clean) to 100 (criminal history) |
-| **PEP (Politically Exposed Person) Risk** | 15% | 0 (not PEP) to 100 (high-ranking PEP) |
-| **High-Risk Jurisdiction Transactions** | 15% | 0 (low-risk country) to 100 (high-risk country) |
-| **Suspicious Transaction Patterns** | 15% | 0 (normal) to 100 (layering/round-tripping) |
-| **Anonymity / Shell Company Link** | 10% | 0 (legitimate company) to 100 (shell entity) |
+| **Sanction Score (OFAC, BIS, FATF, etc.)** | 25% | 0 (clean) to 100 (sanctioned) |
+| **Adverse Media (Fraud, Crime, etc.)** | 20% | 0 (clean) to 100 (criminal history) |
+| **PEP (Politically Exposed Person) Score** | 15% | 0 (not PEP) to 100 (high-ranking PEP) |
+| **High-Risk Jurisdiction Score** | 15% | 0 (low-risk country) to 100 (high-risk country) |
+| **Suspicious Transaction Pattern Score** | 15% | 0 (normal) to 100 (layering/round-tripping) |
+| **Anonymity / Shell Company Link Score** | 10% | 0 (legitimate company) to 100 (shell entity) |
 
 **Final Risk Score Calculation:**
-- **Score = (Sanction Score × 0.25) + (Adverse Media × 0.20) + (PEP Score × 0.15) + (Jurisdiction Score × 0.15) + (Transaction Pattern Score × 0.15) + (Shell Company Score × 0.10)**
+- **Score = (Sanction Score × 0.25) + (Adverse Media × 0.20) + (PEP Score × 0.15) + (High-Risk Jurisdiction Score × 0.15) + (Suspicious Transaction Pattern Score × 0.15) + (Shell Company Link Score × 0.10)**
 - **Thresholds:**
   - **0-30 = Low Risk**
   - **31-60 = Medium Risk**

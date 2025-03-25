@@ -13,6 +13,8 @@ app = FastAPI()
 
 class EntityInput(BaseModel):
     entities: List[str]  # List of entity names provided by the user
+    amount: float  # Amount associated with the transaction
+    currency: str  # Currency associated with the transaction
 
 
 # Function to perform a web search using Bing Search API
@@ -41,20 +43,25 @@ def analyze_sentiment(text):
 
 @app.post("/entity/assessment")
 async def upload_file(input_data: EntityInput):
-    # print("Starting the analysis...")
-    # content = await file.read()
-    # transactionDetails = content.decode("utf-8")
-
-    # # Prompt for extracting entities
-    # prompt = f"Identify people and company in '{transactionDetails}'. Return a JSON with objects identifiedRisks, entityBasicRiskRating, entityName and entityType. entityType can be People or Company. IdentifiedRisks field should have risks identified with people or company based on transaction input given. entityBasicRisk rating will be very low, low, medium, high, very high based on notes and other details in transaction. Keep the original transaction detail fields associated with each entity for verification."
-    # # Step 1: Extract entities using GenAI
-    # entities = ask_genai(prompt, "Entity Extraction")
-    # print("Entities identified:")
-    # print(entities)
     entities = input_data.entities  # Get the list of entities from the user input
+    amount = input_data.amount  # Get the transaction amount
+    currency = input_data.currency  # Get the transaction currency
 
-    results = []
-    # Fetch data from OpenCorporates or other sources
+    if len(entities) < 2:
+        return {"error": "At least two entities are required for the transaction."}
+
+    # Define the transaction details
+    transaction_details = {
+        "from": entities[0],
+        "to": entities[1],
+        "amount": amount,
+        "currency": currency,
+    }
+
+    print(f"Transaction details: {transaction_details}")
+
+    # Perform web search for all entities and aggregate results
+    combined_search_results = []
     for entity_name in entities:
         print(f"Performing web search for entity: {entity_name}")
         search_results = web_search(entity_name)  # Perform web search
@@ -62,26 +69,31 @@ async def upload_file(input_data: EntityInput):
         if not search_results:
             search_results = [{"snippet": "No data available"}]
 
-        # Perform sentiment analysis on the search results
-        combined_text = " ".join(
-            [
-                result.get("snippet", "")
-                for result in search_results
-                if isinstance(result, dict)
-            ]
-        )
-        # Combine snippets
-        sentiment = (
-            analyze_sentiment(combined_text) if combined_text else "No data available"
-        )
+        combined_search_results.extend(search_results)
 
-        entity_result = {
+    # Combine all snippets for sentiment analysis
+    combined_text = " ".join(
+        [
+            result.get("snippet", "")
+            for result in combined_search_results
+            if isinstance(result, dict)
+        ]
+    )
+
+    # Perform sentiment analysis on the combined text
+    sentiment = (
+        analyze_sentiment(combined_text) if combined_text else "No data available"
+    )
+
+    # Prepare the results for all entities
+    results = [
+        {
             "entityName": entity_name,
-            "searchResults": search_results,
+            "searchResults": combined_search_results,
             "sentiment": sentiment,
         }
-
-        results.append(entity_result)
+        for entity_name in entities
+    ]
 
     # Get current script directory
     BASE_DIR = os.path.dirname(__file__)
@@ -90,21 +102,31 @@ async def upload_file(input_data: EntityInput):
     assessement_file_path = os.path.join(BASE_DIR, "assessment_rules.txt")
     with open(assessement_file_path, "r", encoding="utf-8") as file:
         assessmentRules = file.read()
+
     # Prompt for coming up with risk assessment
-    assessmentPrompt = f"Use the following assessment rules and results dictionary and come up with riskRating, riskRationale, complianceRating and complianceRationle  for each entity in '{entities}', AssessmentRules:'{assessmentRules}'. Look for internet for more recent data and news. Example check in Google for any negative news or results. Check in OpenCorporate, Wikipedia, Sanctions lists around the world. Keep the original transaction detail fields associated with each entity for verification. In Rationale mention which source of data was the reason like Transaction detail, Google, Wikipedia, Sanctions List, OpenCorporate etc.  Provide output in JSON format. Dont add any other text in output apart from this report."
-    # Step 2: Risk Assessement using GenAI
+    assessmentPrompt = (
+    f"Use the following assessment rules and results dictionary to evaluate the transaction. "
+    f"Run the evaluation 20 times independently and calculate the average confidence score across all runs. "
+    f"Provide a final riskRating, riskRationale, and the average confidence score for the transaction. "
+    f"Transaction details: {transaction_details}, AssessmentRules: '{assessmentRules}'. "
+    f"Check in OpenCorporate, Wikipedia, Sanctions lists around the world. "
+    f"Keep the original transaction detail fields associated, for verification and make sure the format is adhering to JSON format"
+    f"In the rationale, mention which source of data was the reason for the evaluation. "
+    f"Extract the following fields from the assessment rules: Sanction Score, Adverse Media, PEP Score, "
+    f"High Risk Jurisdiction Score, Suspicious Transaction Pattern Score, Shell Company Link Score. "
+    f"Provide the output in JSON format with the following structure: "
+    f'{{"Transaction details" , "riskRating": <value>, "riskRationale": <string>, '
+    f'"averageConfidenceScore": <value>, "Sanction Score": <value>, "Adverse Media": <value>, '
+    f'"PEP Score": <value>, "High Risk Jurisdiction Score": <value>, '
+    f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
+    f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
+    f"Do not include any additional text in the output apart from this report."
+)
+
+    # Step 2: Risk Assessment using GenAI
     riskAndComplianceReport = ask_genai(assessmentPrompt, "Risk Assessment")
     print("Final Risk and Compliance Report:")
     print(riskAndComplianceReport)
-    print("Analysis is complete. Returning the result.")
-    # Clean the string by removing "```json" and "```"
-    # if riskAndComplianceReport.startswith("```json"):
-    #     riskAndComplianceReport = riskAndComplianceReport.lstrip("```json")
-    # if riskAndComplianceReport.endswith("```"):
-    #     riskAndComplianceReport = riskAndComplianceReport.rstrip("```")
-    # cleaned_str = riskAndComplianceReport.strip()
-
-    riskAndComplianceReport = ask_genai(assessmentPrompt, "Risk Assessment")
 
     # ✅ If it's a string, convert it to a dictionary
     if isinstance(riskAndComplianceReport, str):
