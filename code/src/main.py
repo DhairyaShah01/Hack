@@ -250,6 +250,7 @@ def process_input(input_data: any):
     f'"PEP Score": <value>, "High Risk Jurisdiction Score": <value>, '
     f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
     f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
+    f"Ensure the other scores have a short justification in them and it is in string format strictly "
     f"Do not include any additional text in the output apart from the generated json."
     f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
 )
