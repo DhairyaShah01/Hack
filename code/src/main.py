@@ -103,7 +103,7 @@ def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
     prompt = (
         f"Extract transaction details from the given text and return structured CSV format:"
         f"Transaction ID, Sender, Receiver, Amount, Currency, Transaction Details."
-        f"Include details such as additional notes, remarks, or any other relevant information in transaction details."
+        f"Include details such as additional notes, remarks, or any other relevant information in transaction details without any special characters in string format adhering to JSON format."
         f"Ensure data integrity and return JSON format."
         f"Do not include any additional text in the output apart from the generated json."
         f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
@@ -170,13 +170,13 @@ async def upload_file(
         print(f"Extracted structured data after: {structured_data_new}") 
         structured_data = structured_data_new 
 
-    if not structured_data_new:
+    if not structured_data:
         raise HTTPException(status_code=500, detail="No structured data found")
 
     results = []
 
     # Extract structured transaction details from unstructured text
-    for transaction in structured_data_new:
+    for transaction in structured_data:
         print(f"Extracted transaction details: {transaction}")
         results.append(process_input(transaction))  # Process each transaction   
 
@@ -263,6 +263,7 @@ def process_input(input_data: any):
     f'"averageConfidenceScore": <value>, "Sanction Score": <value>, "Adverse Media": <value>, '
     f'"PEP Score": <value>, "High Risk Jurisdiction Score": <value>, '
     f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
+    f"Include an extra field EntityType which is an array containing the entity type from a bank's perspective of both the sender and receiver in one or two words without special characters in an array, with a default type Corporation if not found"
     f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
     f"Ensure the other scores have a short justification in a separate field in string format adhering to JSON schema"
     f"Do not include any additional text in the output apart from the generated json."

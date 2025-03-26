@@ -1,4 +1,4 @@
-# 🚀 Project Name
+# 🚀 Hackathon Project
 
 ## 📌 Table of Contents
 - [Introduction](#introduction)
@@ -14,26 +14,38 @@
 ---
 
 ## 🎯 Introduction
-A brief overview of your project and its purpose. Mention which problem statement are your attempting to solve. Keep it concise and engaging.
+The Transaction Risk Assessment API is a FastAPI-based solution designed to assess transaction risks using AI-powered entity extraction, sentiment analysis, and compliance checks. It processes both structured and unstructured transaction data to generate risk assessments and compliance reports.
 
 ## 🎥 Demo
-🔗 [Live Demo](#) (if applicable)  
-📹 [Video Demo](#) (if applicable)  
-🖼️ Screenshots:
+🔗 [Live Demo](#)  
+📹 [Video Demo](#)  
+🖼️ Project Overview:
 
-![Screenshot 1](link-to-image)
+![Project Overview](artifacts/images/projectOverview.png)
 
 ## 💡 Inspiration
-What inspired you to create this project? Describe the problem you're solving.
+The need for robust financial compliance and risk assessment tools inspired this project. It aims to simplify and automate the process of identifying high-risk transactions, ensuring regulatory compliance, and mitigating fraud.
 
 ## ⚙️ What It Does
-Explain the key features and functionalities of your project.
+- Parses CSV files and unstructured text for transaction data.
+- Extracts structured transaction details using AI.
+- Performs web searches for additional context about entities.
+- Analyzes sentiment for entities involved in transactions.
+- Evaluates transaction risks based on predefined rules.
+- Generates detailed risk and compliance reports.
 
 ## 🛠️ How We Built It
-Briefly outline the technologies, frameworks, and tools used in development.
+- **Backend**: FastAPI for building the API endpoints.
+- **AI Integration**: OpenAI API and Hugging Face Transformers for entity extraction and sentiment analysis.
+- **Web Search**: DuckDuckGo API for fetching additional entity information.
+- **Risk Assessment**: Custom rules defined in `assessment_rules.txt` for evaluating transaction risks.
 
 ## 🚧 Challenges We Faced
-Describe the major technical or non-technical challenges your team encountered.
+- Ensuring the accuracy of AI-generated structured data from unstructured text.
+- Handling edge cases in transaction data, such as missing fields or invalid formats.
+- Integrating multiple APIs (OpenAI, DuckDuckGo) seamlessly.
+- Designing a robust risk assessment framework.
+
 
 ## 🏃 How to Run
 1. Clone the repository  
@@ -42,19 +54,20 @@ Describe the major technical or non-technical challenges your team encountered.
    ```
 2. Install dependencies  
    ```sh
-   npm install  # or pip install -r requirements.txt (for Python)
+   pip install -r code/src/requirements.txt
    ```
 3. Run the project  
    ```sh
-   npm start  # or python app.py
+   uvicorn code.src.main:app --reload
    ```
 
 ## 🏗️ Tech Stack
-- 🔹 Frontend: React / Vue / Angular
-- 🔹 Backend: Node.js / FastAPI / Django
-- 🔹 Database: PostgreSQL / Firebase
-- 🔹 Other: OpenAI API / Twilio / Stripe
+- 🔹 Backend: FastAPI
+- 🔹 AI Integration:  OpenAI API, Hugging Face Transformers
+- 🔹 Web Search: DuckDuckGo API
+- 🔹 Language: Python
+- 🔹 Middleware: CORS
 
 ## 👥 Team
-- **Your Name** - [GitHub](#) | [LinkedIn](#)
-- **Teammate 2** - [GitHub](#) | [LinkedIn](#)
+- **[Your Name]** - [GitHub](#) | [LinkedIn](#)
+- **[Teammate 2]** - [GitHub](#) | [LinkedIn](#)
