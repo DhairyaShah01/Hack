@@ -170,13 +170,13 @@ async def upload_file(
         print(f"Extracted structured data after: {structured_data_new}") 
         structured_data = structured_data_new 
 
-    if not structured_data_new:
+    if not structured_data:
         raise HTTPException(status_code=500, detail="No structured data found")
 
     results = []
 
     # Extract structured transaction details from unstructured text
-    for transaction in structured_data_new:
+    for transaction in structured_data:
         print(f"Extracted transaction details: {transaction}")
         results.append(process_input(transaction))  # Process each transaction   
 
