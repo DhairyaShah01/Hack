@@ -9,7 +9,7 @@ def ask_genai(prompt, prompt_type):
         f"Processing {prompt_type}... Retrieving and evaluating multiple data sources. This may take a few minutes. Thank you for your patience. Comprehensive insights are on the way."
     )
     client = openai.OpenAI(
-        api_key="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",
+        api_key="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",
         base_url="https://openrouter.ai/api/v1",
     )
 
