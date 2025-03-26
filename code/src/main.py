@@ -58,6 +58,7 @@ def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
         f"EntityInput format: {{'transaction_id': <string>, 'sender': <string>, 'receiver': <string>, "
         f"'amount': <float>, 'currency': <string>, 'transaction_details': <string>}}. "
         f"Ensure the output is in JSON format and adheres to the EntityInput structure."
+        f"Ensure there are no invalid escape characters in the JSON output"
         f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
         f"If currency is not found, default to USD"
     )
@@ -96,6 +97,7 @@ def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
         f"Ensure data integrity and return JSON format."
         f"Do not include any additional text in the output apart from the generated json."
         f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
+        f"Ensure there are no invalid escape characters in the JSON output"
     )
     response = ask_genai(f"Text: {text}\n{prompt}", "Entity Extraction")
     try:
