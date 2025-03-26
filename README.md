@@ -90,4 +90,6 @@ The need for robust financial compliance and risk assessment tools inspired this
 
 ## 👥 Team
 - **[Dhairya]** - [GitHub](https://github.com/DhairyaShah01)
-- **[Teammate 2]** - [GitHub](#) | [LinkedIn](#)
+- **[Sourabh]** - [GitHub](https://github.com/SourabhYelluru131)
+- **[Jayant]** - [GitHub](https://github.com/jayant1628)
+- **[Harshit]** - [GitHub](https://github.com/jharshit013)
