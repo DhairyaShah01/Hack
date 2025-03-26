@@ -3,13 +3,13 @@ import json
 import re
 
 
-def ask_genai(prompt, prompt_type):
+def process_ai_query(prompt, prompt_type):
     print(f"Asking GenAI: '{prompt}'")
     print(
         f"Processing {prompt_type}... Retrieving and evaluating multiple data sources. This may take a few minutes. Thank you for your patience. Comprehensive insights are on the way."
     )
     client = openai.OpenAI(
-        api_key="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",
+        api_key="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",
         base_url="https://openrouter.ai/api/v1",
     )
 
