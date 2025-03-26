@@ -87,6 +87,16 @@ def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
             detail=f"Failed to convert row to EntityInput: {str(e)}",
         )
 
+def extract_multi_input_unstructured(text: str) -> List[Dict[str,str]]:
+    transactions = text.split(b"---")
+    print(transactions)
+    data = []
+    for t in transactions:
+        var = extract_from_unstructured(t)
+        print(var, type(var))
+        data.append(var)
+    print("Multi input data: ", data)
+    return data
 
 # Extracts structured transaction details from unstructured text using GenAI.
 def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
@@ -151,18 +161,22 @@ async def upload_file(
         structured_data = [convert_row_to_entity_input(row) for row in structured_data]
     else:
         text = await file.read()
-        structured_data = extract_from_unstructured(text)
+        structured_data = extract_multi_input_unstructured(text)
         print(f"Extracted structured data before: {structured_data}")
-        structured_data = [convert_row_to_entity_input(structured_data)]
-        print(f"Extracted structured data after: {structured_data}")  
+        structured_data_new = []
+        for data in structured_data:
+            var = convert_row_to_entity_input(data) ##ToDo: removed braces
+            structured_data_new.append(var)
+        print(f"Extracted structured data after: {structured_data_new}") 
+        structured_data = structured_data_new 
 
-    if not structured_data:
+    if not structured_data_new:
         raise HTTPException(status_code=500, detail="No structured data found")
 
     results = []
 
     # Extract structured transaction details from unstructured text
-    for transaction in structured_data:
+    for transaction in structured_data_new:
         print(f"Extracted transaction details: {transaction}")
         results.append(process_input(transaction))  # Process each transaction   
 
@@ -250,6 +264,7 @@ def process_input(input_data: any):
     f'"PEP Score": <value>, "High Risk Jurisdiction Score": <value>, '
     f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
     f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
+    f"Ensure the other scores have a short justification in a separate field in string format adhering to JSON schema"
     f"Do not include any additional text in the output apart from the generated json."
     f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
 )
