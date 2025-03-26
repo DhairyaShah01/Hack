@@ -48,6 +48,7 @@ The need for robust financial compliance and risk assessment tools inspired this
 
 
 ## 🏃 How to Run
+### Backend
 1. Clone the repository  
    ```sh
    git clone https://github.com/your-repo.git
@@ -56,10 +57,29 @@ The need for robust financial compliance and risk assessment tools inspired this
    ```sh
    pip install -r code/src/requirements.txt
    ```
-3. Run the project  
+3. Run the backend server  
    ```sh
    uvicorn code.src.main:app --reload
    ```
+4. Access the API documentation at `http://127.0.0.1:8000/docs`.
+
+### Frontend (UI)
+1. Install Streamlit if not already installed:
+   ```sh
+   pip install streamlit
+   ```
+2. Navigate to the directory containing the `app.py` file:
+   ```sh
+   cd code/src
+   ```
+3. Run the Streamlit app:
+   ```sh
+   streamlit run app.py
+   ```
+4. Open the app in your browser (Streamlit will provide a local URL, typically `http://localhost:8501`).
+5. Upload a file (CSV or text) and view the results.
+
+---
 
 ## 🏗️ Tech Stack
 - 🔹 Backend: FastAPI

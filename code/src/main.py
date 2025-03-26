@@ -2,7 +2,7 @@ import csv
 from http.client import HTTPException
 import io
 from fastapi import FastAPI, File, UploadFile
-from genai_prompt import ask_genai
+from ai_prompt_handler import process_ai_query
 from pydantic import BaseModel
 import os
 import json
@@ -49,9 +49,9 @@ def parse_csv(file_content: bytes) -> List[Dict[str, str]]:
 
 def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
     """
-    Converts a selected row into the EntityInput format using the ask_genai function.
+    Converts a selected row into the EntityInput format using the process_ai_query function.
     """
-    # Generate a prompt for ask_genai
+    # Generate a prompt for process_ai_query
     prompt = (
         f"Convert the following row into the EntityInput format:\n"
         f"Row: {row}\n"
@@ -65,8 +65,8 @@ def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
 
     print("Souchu: ", row)
 
-    # Call ask_genai to process the row
-    response = ask_genai(prompt, "Row to EntityInput Conversion")
+    # Call process_ai_query to process the row
+    response = process_ai_query(prompt, "Row to EntityInput Conversion")
 
     try:
         # Parse the response into a dictionary
@@ -109,7 +109,7 @@ def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
         f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
         f"Ensure there are no invalid escape characters in the JSON output"
     )
-    response = ask_genai(f"Text: {text}\n{prompt}", "Entity Extraction")
+    response = process_ai_query(f"Text: {text}\n{prompt}", "Entity Extraction")
     try:
         if isinstance(response, str):
             return json.loads(response)
@@ -271,7 +271,7 @@ def process_input(input_data: any):
 )
 
     # Step 2: Risk Assessment using GenAI
-    riskAndComplianceReport = ask_genai(assessmentPrompt, "Risk Assessment")
+    riskAndComplianceReport = process_ai_query(assessmentPrompt, "Risk Assessment")
     print("Final Risk and Compliance Report:")
     print(riskAndComplianceReport)
 
