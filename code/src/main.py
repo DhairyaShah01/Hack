@@ -2,7 +2,7 @@ import csv
 from http.client import HTTPException
 import io
 from fastapi import FastAPI, File, UploadFile
-from ai_prompt_handler import process_ai_query
+from genai_prompt import ask_genai
 from pydantic import BaseModel
 import os
 import json
@@ -10,6 +10,7 @@ import requests  # For making HTTP requests
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
 from typing import Dict, List, Optional  # Add this import
+from TransactionDTO import TransactionDTO
 
 app = FastAPI()
 
@@ -49,9 +50,9 @@ def parse_csv(file_content: bytes) -> List[Dict[str, str]]:
 
 def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
     """
-    Converts a selected row into the EntityInput format using the process_ai_query function.
+    Converts a selected row into the EntityInput format using the ask_genai function.
     """
-    # Generate a prompt for process_ai_query
+    # Generate a prompt for ask_genai
     prompt = (
         f"Convert the following row into the EntityInput format:\n"
         f"Row: {row}\n"
@@ -65,8 +66,8 @@ def convert_row_to_entity_input(row: Dict[str, str]) -> EntityInput:
 
     print("Souchu: ", row)
 
-    # Call process_ai_query to process the row
-    response = process_ai_query(prompt, "Row to EntityInput Conversion")
+    # Call ask_genai to process the row
+    response = ask_genai(prompt, "Row to EntityInput Conversion")
 
     try:
         # Parse the response into a dictionary
@@ -109,7 +110,7 @@ def extract_from_unstructured(text: str) -> List[Dict[str, str]]:
         f"NO explanation, NO markdown formatting, NO additional commentary—ONLY return raw JSON."
         f"Ensure there are no invalid escape characters in the JSON output"
     )
-    response = process_ai_query(f"Text: {text}\n{prompt}", "Entity Extraction")
+    response = ask_genai(f"Text: {text}\n{prompt}", "Entity Extraction")
     try:
         if isinstance(response, str):
             return json.loads(response)
@@ -180,7 +181,20 @@ async def upload_file(
         print(f"Extracted transaction details: {transaction}")
         results.append(process_input(transaction))  # Process each transaction   
 
-    return results
+    transactionDtos = []
+    for r in results:
+        print("Type of r: ", type(r))
+        print(r)
+        transactionDetails = r.get("Transaction details")
+        transactionId = transactionDetails.get("transaction_id")
+        riskRating = r.get("riskRating")
+        entityList = [transactionDetails.get("from") , transactionDetails.get("to")]
+        entityType = r.get("EntityType")
+        confidenceScore = r.get("averageConfidenceScore")
+        reason = r.get("riskRationale")
+        supportingEvidence = r.get("riskRationaleSources")
+        transactionDtos.append(TransactionDTO(transactionId, entityList, entityType, riskRating, supportingEvidence, confidenceScore, reason))
+    return transactionDtos
 
 def process_input(input_data: any):
     entities = [input_data.sender, input_data.receiver]  # Get the list of entities from the user input
@@ -259,10 +273,11 @@ def process_input(input_data: any):
     f"Extract the following fields from the assessment rules: Sanction Score, Adverse Media, PEP Score, "
     f"High Risk Jurisdiction Score, Suspicious Transaction Pattern Score, Shell Company Link Score. "
     f"Provide the output in JSON format with the following structure: "
-    f'{{"Transaction details" , "riskRating": <value>, "riskRationale": <string>, '
+    f'{{"Transaction details" , "riskRating": <value>, "riskRationale": <string>, riskRationaleSources: <string>,'
     f'"averageConfidenceScore": <value>, "Sanction Score": <value>, "Adverse Media": <value>, '
     f'"PEP Score": <value>, "High Risk Jurisdiction Score": <value>, '
     f'"Suspicious Transaction Pattern Score": <value>, "Shell Company Link Score": <value>}}. '
+    f"Keep the case of key names as given in the prompt. "
     f"Include an extra field EntityType which is an array containing the entity type from a bank's perspective of both the sender and receiver in one or two words without special characters in an array, with a default type Corporation if not found"
     f"Ensure the rationale is in a proper string format adhering to JSON value format without linebreaks. "
     f"Ensure the other scores have a short justification in a separate field in string format adhering to JSON schema"
@@ -271,7 +286,7 @@ def process_input(input_data: any):
 )
 
     # Step 2: Risk Assessment using GenAI
-    riskAndComplianceReport = process_ai_query(assessmentPrompt, "Risk Assessment")
+    riskAndComplianceReport = ask_genai(assessmentPrompt, "Risk Assessment")
     print("Final Risk and Compliance Report:")
     print(riskAndComplianceReport)
 
