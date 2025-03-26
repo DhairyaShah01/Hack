@@ -89,5 +89,5 @@ The need for robust financial compliance and risk assessment tools inspired this
 - 🔹 Middleware: CORS
 
 ## 👥 Team
-- **[Your Name]** - [GitHub](#) | [LinkedIn](#)
+- **[Dhairya]** - [GitHub](https://github.com/DhairyaShah01)
 - **[Teammate 2]** - [GitHub](#) | [LinkedIn](#)
